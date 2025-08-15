@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generate Midtrans Payment Link</title>
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- VANTA Clouds -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.clouds.min.js"></script>
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    font-family: 'Poppins', sans-serif;
+  }
+  #vanta-bg {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: -1;
+  }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.37);
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .button {
+    cursor: pointer;
+    border: solid 4px #161616;
+    border-top: none;
+    border-radius: 20px;
+    position: relative;
+    box-shadow: 0px 4px 10px #00000062, 0px 10px 40px -10px #000000a6,
+      0px 12px 45px -15px #00000071;
+    transition: all 0.3s ease;
+  }
+  .inner {
+    padding: 12px 30px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border-bottom: solid 3px #374e72;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #5771a5, #000);
+    color: #fff;
+    text-shadow: 1px 1px #000, 0 0 9px #fff;
+  }
+  .svgs {
+    position: relative;
+    margin-top: 5px;
+    z-index: 10;
+  }
+  .svgs > * {
+    filter: drop-shadow(0 0 6px #fff) drop-shadow(1px 1px 0px #000);
+  }
+  .svgs .svg-s {
+    position: absolute;
+    font-size: 0.8rem;
+    left: 20px;
+    top: -4px;
+  }
+  .button:active {
+    box-shadow: none;
+    transform: translateY(2px);
+  }
+</style>
+</head>
+<body>
+<div id="vanta-bg"></div>
+
+<div class="flex justify-center items-center min-h-screen px-4">
+  <div class="glass-card">
+    <h2 class="text-white text-2xl mb-6 text-center font-semibold">Generate Midtrans Payment Link</h2>
+    <form id="paymentForm">
+      <label class="text-white">Nominal (Rp):</label>
+      <input type="text" id="amount" required class="w-full p-2 rounded-md mb-4 text-black">
+
+      <label class="text-white">Deskripsi:</label>
+      <input type="text" id="description" class="w-full p-2 rounded-md mb-6 text-black">
+
+      <button type="submit" class="button w-full">
+        <div class="inner">
+          <div class="svgs">
+            <svg viewBox="0 0 256 256" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" class="svg-l">
+              <path d="M240 128a15.79 15.79 0 0 1-10.5 15l-63.44 23.07L143 229.5a16 16 0 0 1-30 0l-23.06-63.44L26.5 143a16 16 0 0 1 0-30l63.44-23.06L113 26.5a16 16 0 0 1 30 0l23.07 63.44L229.5 113a15.79 15.79 0 0 1 10.5 15" fill="currentColor"></path>
+            </svg>
+            <svg viewBox="0 0 256 256" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" class="svg-s">
+              <path d="M240 128a15.79 15.79 0 0 1-10.5 15l-63.44 23.07L143 229.5a16 16 0 0 1-30 0l-23.06-63.44L26.5 143a16 16 0 0 1 0-30l63.44-23.06L113 26.5a16 16 0 0 1 30 0l23.07 63.44L229.5 113a15.79 15.79 0 0 1 10.5 15" fill="currentColor"></path>
+            </svg>
+          </div>
+          Generate
+        </div>
+      </button>
+    </form>
+    <h3 id="result" class="mt-4 text-white break-all"></h3>
+  </div>
+</div>
+
+<script>
+  // VANTA CLOUDS
+  VANTA.CLOUDS({
+    el: "#vanta-bg",
+    mouseControls: true,
+    touchControls: true,
+    gyroControls: false,
+    minHeight: 200.00,
+    minWidth: 200.00,
+    cloudColor: 0x7f9dc3,
+    sunGlareColor: 0x26120b,
+    speed: 2.4
+  });
+
+  // Format ribuan saat mengetik
+  const amountInput = document.getElementById("amount");
+  amountInput.addEventListener("input", (e) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value) {
+      e.target.value = new Intl.NumberFormat("id-ID").format(value);
+    } else {
+      e.target.value = "";
+    }
+  });
+
+  // Handle form submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const amount = document.getElementById("amount").value.replace(/\./g, "");
+    const description = document.getElementById("description").value;
+
+    try {
+      const res = await fetch("http://127.0.0.1:3000/generate-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount, description })
+      });
+
+      const data = await res.json();
+      const resultEl = document.getElementById("result");
+      if (data.paymentUrl) {
+        resultEl.innerHTML = `
+          ✅ Link berhasil dibuat: 
+          <a href="${data.paymentUrl}" target="_blank" class="underline text-blue-400">${data.paymentUrl}</a>
+          <button id="copyBtn" class="ml-2 bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm">
+            Copy
+          </button>
+        `;
+        document.getElementById("copyBtn").addEventListener("click", () => {
+          navigator.clipboard.writeText(data.paymentUrl).then(() => {
+            alert("Link berhasil disalin!");
+          }).catch(() => {
+            alert("Gagal menyalin link");
+          });
+        });
+      } else {
+        resultEl.textContent = "❌ Gagal membuat link";
+      }
+    } catch (err) {
+      document.getElementById("result").textContent = "❌ Terjadi error";
+      console.error(err);
+    }
+  };
+
+  document.getElementById("paymentForm").addEventListener("submit", handleSubmit);
+</script>
+</body>
+</html>
