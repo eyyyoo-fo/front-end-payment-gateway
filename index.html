@@ -142,7 +142,7 @@
     const description = document.getElementById("description").value;
 
     try {
-      const res = await fetch("https://a974b232-b8f9-4e85-a5e4-198d619e1fd0-00-22f6sjqg3u02x.pike.replit.dev/generate-link", {
+      const res = await fetch("https://a974b232-b8f9-4e85-a5e4-198d619e1fd0-00-22f6sjqg3u02x.pike.replit.dev", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount, description })
